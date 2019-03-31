@@ -10,7 +10,8 @@ abstract class Dao<T> {
 }
 class DatabaseProvider {
   static final _instance = DatabaseProvider._internal();
-  static DatabaseProvider get = _instance;
+  static final DatabaseProvider get = _instance;
+
   bool isInitialized = false;
   Database _db;
 
@@ -36,7 +37,7 @@ class Music {
   String artist;
   String genre;
   String album;
-  Music(this.title);
+  Music(this.title, {this.artist, this.genre, this.album});
 }
 
 class MusicDao implements Dao<Music> {
