@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:audioplayer/audioplayer.dart';
+import 'package:haichaoyin/player/choose_music.dart';
 import 'package:http/http.dart' as http;
 
 class Player extends StatefulWidget {
@@ -139,11 +140,27 @@ class _PlayerState extends State<Player> {
             );
           })),
       floatingActionButton: FloatingActionButton(
-        onPressed: _refreshMusic,
+        onPressed: () => {
+          _navigateAndChooseMusic(context)
+        },
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+  _navigateAndChooseMusic(BuildContext context) async {
+    // Navigator.push returns a Future that will complete after we call
+    // Navigator.pop on the Selection Screen!
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChooseMusicScreen()),
+    );
+
+    // After the Selection Screen returns a result, hide any previous snackbars
+    // and show the new result!
+    Scaffold.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text("$result")));
   }
 
   Widget _buildDescSection(Music music) {
