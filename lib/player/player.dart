@@ -139,13 +139,15 @@ class _PlayerState extends State<Player> {
               ],
             );
           })),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {
-          _navigateAndChooseMusic(context)
-        },
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: Builder(builder: (BuildContext context) {
+        return FloatingActionButton(
+          onPressed: () => {
+            _navigateAndChooseMusic(context)
+          },
+          tooltip: 'Increment',
+          child: Icon(Icons.add),
+        );
+      }), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
   _navigateAndChooseMusic(BuildContext context) async {
