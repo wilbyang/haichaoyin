@@ -4,7 +4,7 @@ class ChooseMusicScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pick an option'),
+        title: Text('选歌'),
       ),
       body: Center(
         child: ListView(

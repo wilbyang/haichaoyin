@@ -157,7 +157,7 @@ class _PlayerState extends State<Player> {
       context,
       MaterialPageRoute(builder: (context) => ChooseMusicScreen()),
     );
-
+    if (result == null) return;
     // After the Selection Screen returns a result, hide any previous snackbars
     // and show the new result!
     Scaffold.of(context)
