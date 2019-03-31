@@ -41,14 +41,26 @@ class Music {
 }
 
 class _PlayerState extends State<Player> {
+  Future<Music> _fetchMusic;
   void _playAudio() {
     var audioPlayer = AudioPlayer();
     audioPlayer.play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3");
   }
 
-  Future<Music> fetchMusic() async {
+
+  @override
+  void initState() {
+    _fetchMusic = fetchMusic('https://jsonplaceholder.typicode.com/posts/1');
+  }
+
+  void _refreshMusic() {
+    setState(() {
+      _fetchMusic = fetchMusic('https://jsonplaceholder.typicode.com/posts/2');
+    });
+  }
+  Future<Music> fetchMusic(String url) async {
     final response =
-        await http.get('https://jsonplaceholder.typicode.com/posts/1');
+        await http.get(url);
 
     if (response.statusCode == 200) {
       // If server returns an OK response, parse the JSON
@@ -88,9 +100,9 @@ class _PlayerState extends State<Player> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildButtonColumn(color, Icons.call, 'CALL'),
-          _buildButtonColumn(color, Icons.near_me, 'ROUTE'),
-          _buildButtonColumn(color, Icons.share, 'SHARE'),
+          _buildButtonColumn(color, Icons.skip_previous, '上一曲'),
+          _buildButtonColumn(color, Icons.play_arrow, '播放'),
+          _buildButtonColumn(color, Icons.skip_next, '下一曲'),
         ],
       ),
     );
@@ -105,9 +117,9 @@ class _PlayerState extends State<Player> {
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
           child: FutureBuilder(
-              future: fetchMusic(),
+              future: _fetchMusic,
               builder: (context, snapshot) {
-            
+                if(!snapshot.hasData) return CircularProgressIndicator();
             return ListView(
               children: <Widget>[
                 Image.network(
@@ -122,7 +134,7 @@ class _PlayerState extends State<Player> {
             );
           })),
       floatingActionButton: FloatingActionButton(
-        onPressed: _playAudio,
+        onPressed: _refreshMusic,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
