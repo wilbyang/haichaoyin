@@ -53,9 +53,9 @@ class _PlayerState extends State<Player> {
     _fetchMusic = fetchMusic('https://jsonplaceholder.typicode.com/posts/1');
   }
 
-  void _refreshMusic() {
+  void _refreshMusic({String url = 'https://jsonplaceholder.typicode.com/posts/2'}) {
     setState(() {
-      _fetchMusic = fetchMusic('https://jsonplaceholder.typicode.com/posts/2');
+      _fetchMusic = fetchMusic(url);
     });
   }
   Future<Music> fetchMusic(String url) async {
@@ -73,23 +73,28 @@ class _PlayerState extends State<Player> {
 
   Column _buildButtonColumn(Color color, IconData icon, String label) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color),
-        Container(
-          margin: const EdgeInsets.only(top: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: color,
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          InkWell(
+            onTap: _refreshMusic,
+            child: Icon(icon, color: color),
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: color,
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+
   }
 
   @override
@@ -97,15 +102,15 @@ class _PlayerState extends State<Player> {
     Color color = Theme.of(context).primaryColor;
 
     Widget buttonSection = Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildButtonColumn(color, Icons.skip_previous, '上一曲'),
-          _buildButtonColumn(color, Icons.play_arrow, '播放'),
-          _buildButtonColumn(color, Icons.skip_next, '下一曲'),
-        ],
-      ),
-    );
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildButtonColumn(color, Icons.skip_previous, '上一曲'),
+            _buildButtonColumn(color, Icons.play_arrow, '播放'),
+            _buildButtonColumn(color, Icons.skip_next, '下一曲'),
+          ],
+        ),
+      );
 
     return Scaffold(
       appBar: AppBar(
