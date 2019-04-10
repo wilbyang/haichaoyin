@@ -119,14 +119,16 @@ class _PlayerState extends State<PlayerPage> {
         title: Text(widget.title),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('我的医生')),
           BottomNavigationBarItem(icon: Icon(Icons.business), title: Text('iCare')),
           BottomNavigationBarItem(icon: Icon(Icons.school), title: Text('严选')),
           BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('我')),
         ],
-        fixedColor: Colors.blueAccent,
         currentIndex: _selectedIndex,
+        unselectedItemColor: Colors.black38,
+        selectedItemColor: Colors.blueAccent,
         onTap: _onItemTapped,
       ),
 
