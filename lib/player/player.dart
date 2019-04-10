@@ -1,12 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:audioplayer/audioplayer.dart';
 import 'package:haichaoyin/player/choose_music.dart';
 import 'package:http/http.dart' as http;
 
-class Player extends StatefulWidget {
-  Player({Key key, this.title}) : super(key: key);
+class PlayerPage extends StatefulWidget {
+  PlayerPage({Key key, this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -41,13 +40,9 @@ class Music {
   }
 }
 
-class _PlayerState extends State<Player> {
+class _PlayerState extends State<PlayerPage> {
+  int _selectedIndex = 1;
   Future<Music> _fetchMusic;
-  void _playAudio() {
-    var audioPlayer = AudioPlayer();
-    audioPlayer.play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3");
-  }
-
 
   @override
   void initState() {
@@ -97,7 +92,11 @@ class _PlayerState extends State<Player> {
       );
 
   }
-
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
@@ -119,6 +118,18 @@ class _PlayerState extends State<Player> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('我的医生')),
+          BottomNavigationBarItem(icon: Icon(Icons.business), title: Text('iCare')),
+          BottomNavigationBarItem(icon: Icon(Icons.school), title: Text('严选')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('我')),
+        ],
+        fixedColor: Colors.blueAccent,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+
       body: Center(
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
@@ -155,7 +166,10 @@ class _PlayerState extends State<Player> {
     // Navigator.pop on the Selection Screen!
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ChooseMusicScreen()),
+      MaterialPageRoute(
+
+        builder: (context) => ChooseMusicScreen()
+      ),
     );
     if (result == null) return;
     // After the Selection Screen returns a result, hide any previous snackbars
