@@ -1,7 +1,10 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/choose_music.dart';
 import 'package:haichaoyin/player/music_data.dart';
+import 'package:audioplayer/audioplayer.dart';
 
 class PlayerPage extends StatefulWidget {
   PlayerPage({Key key, this.title}) : super(key: key);
@@ -18,8 +21,14 @@ class ControlWidget extends StatelessWidget {
   final IconData icon;
 
   final Color color;
+  final Function onTapAction;
 
-  const ControlWidget({Key key, @required this.label, @required this.icon, @required this.color}) : super(key: key);
+  const ControlWidget({Key key,
+    @required this.label,
+    @required this.icon,
+    @required this.color,
+    this.onTapAction}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -27,7 +36,7 @@ class ControlWidget extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         InkWell(
-          onTap: null,
+          onTap: onTapAction,
           child: Icon(icon, color: color),
         ),
 
@@ -47,7 +56,86 @@ class ControlWidget extends StatelessWidget {
   }
 
 }
+enum PlayerState { stopped, playing, paused }
 class _PlayerState extends State<PlayerPage> {
+  
+  AudioPlayer audioPlayer;
+  Duration duration;
+  Duration position;
+  PlayerState playerState;
+  String localFilePath;
+
+
+  get isPlaying => playerState == PlayerState.playing;
+  get isPaused => playerState == PlayerState.paused;
+
+  get durationText =>
+      duration != null ? duration.toString().split('.').first : '';
+  get positionText =>
+      position != null ? position.toString().split('.').first : '';
+
+  bool isMuted = false;
+
+  StreamSubscription _positionSubscription;
+  StreamSubscription _audioPlayerStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer = AudioPlayer();
+    _positionSubscription = audioPlayer.onAudioPositionChanged
+        .listen((p) => setState(() => position = p));
+    _audioPlayerStateSubscription =
+        audioPlayer.onPlayerStateChanged.listen((s) {
+          if (s == AudioPlayerState.PLAYING) {
+            setState(() => duration = audioPlayer.duration);
+          } else if (s == AudioPlayerState.STOPPED) {
+            onComplete();
+            setState(() {
+              position = duration;
+            });
+          }
+        }, onError: (msg) {
+          setState(() {
+            playerState = PlayerState.stopped;
+            duration = new Duration(seconds: 0);
+            position = new Duration(seconds: 0);
+          });
+        });
+  }
+  void onComplete() {
+    setState(() => playerState = PlayerState.stopped);
+  }
+
+  Future<void> play(String uri) async {
+    print(uri);
+    await audioPlayer.play(uri);
+    setState(() => playerState = PlayerState.playing);
+  }
+
+  Future<void> pause() async {
+    await audioPlayer.pause();
+    setState(() => playerState = PlayerState.paused);
+  }
+
+  Future<void> stop() async {
+    await audioPlayer.stop();
+    setState(() {
+      playerState = PlayerState.stopped;
+      position = new Duration();
+    });
+  }
+
+
+  @override
+  void dispose() {
+    audioPlayer.stop();
+    _positionSubscription.cancel();
+    _audioPlayerStateSubscription.cancel();
+    audioPlayer = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
@@ -79,7 +167,7 @@ class _PlayerState extends State<PlayerPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放'),
+                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放', onTapAction:() => play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3")),
                       ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
                     ],
                   ),
@@ -123,6 +211,8 @@ class _PlayerState extends State<PlayerPage> {
       ..removeCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text("$result")));
   }
+
+  
 
 }
 
