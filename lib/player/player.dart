@@ -1,20 +1,10 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/choose_music.dart';
-import 'package:http/http.dart' as http;
+import 'package:haichaoyin/player/music_data.dart';
 
 class PlayerPage extends StatefulWidget {
   PlayerPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -22,81 +12,42 @@ class PlayerPage extends StatefulWidget {
   _PlayerState createState() => _PlayerState();
 }
 
-class Music {
-  final int userId;
-  final int id;
-  final String name;
-  final String description;
+class ControlWidget extends StatelessWidget {
+  final String label;
 
-  Music({this.userId, this.id, this.name, this.description});
+  final IconData icon;
 
-  factory Music.fromJson(Map<String, dynamic> json) {
-    return Music(
-      userId: json['userId'],
-      id: json['id'],
-      name: json['title'],
-      description: json['body'],
-    );
-  }
-}
+  final Color color;
 
-class _PlayerState extends State<PlayerPage> {
-  int _selectedIndex = 1;
-  Future<Music> _fetchMusic;
-
+  const ControlWidget({Key key, @required this.label, @required this.icon, @required this.color}) : super(key: key);
   @override
-  void initState() {
-    _fetchMusic = fetchMusic('https://jsonplaceholder.typicode.com/posts/1');
-  }
-
-  void _refreshMusic({String url = 'https://jsonplaceholder.typicode.com/posts/2'}) {
-    setState(() {
-      _fetchMusic = fetchMusic(url);
-    });
-  }
-  Future<Music> fetchMusic(String url) async {
-    final response =
-        await http.get(url);
-
-    if (response.statusCode == 200) {
-      // If server returns an OK response, parse the JSON
-      return Music.fromJson(json.decode(response.body));
-    } else {
-      // If that response was not OK, throw an error.
-      throw Exception('Failed to load post');
-    }
-  }
-
-  Column _buildButtonColumn(Color color, IconData icon, String label) {
+  Widget build(BuildContext context) {
     return Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          InkWell(
-            onTap: _refreshMusic,
-            child: Icon(icon, color: color),
-          ),
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InkWell(
+          onTap: null,
+          child: Icon(icon, color: color),
+        ),
 
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: color,
-              ),
+        Container(
+          margin: const EdgeInsets.only(top: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: color,
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
-  }
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+}
+class _PlayerState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
@@ -105,9 +56,9 @@ class _PlayerState extends State<PlayerPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildButtonColumn(color, Icons.skip_previous, '上一曲'),
-            _buildButtonColumn(color, Icons.play_arrow, '播放'),
-            _buildButtonColumn(color, Icons.skip_next, '下一曲'),
+            ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
+            ControlWidget(color: color, icon: Icons.play_arrow, label:'播放'),
+            ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
           ],
         ),
       );
@@ -118,25 +69,11 @@ class _PlayerState extends State<PlayerPage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('我的医生')),
-          BottomNavigationBarItem(icon: Icon(Icons.business), title: Text('iCare')),
-          BottomNavigationBarItem(icon: Icon(Icons.school), title: Text('严选')),
-          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('我')),
-        ],
-        currentIndex: _selectedIndex,
-        unselectedItemColor: Colors.black38,
-        selectedItemColor: Colors.blueAccent,
-        onTap: _onItemTapped,
-      ),
-
       body: Center(
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
           child: FutureBuilder(
-              future: _fetchMusic,
+              future: MusicsDatabaseRepository.get.insert(Music(title: "匆匆那年", uri: "", artist: "王菲", genre: "伤感真情", album: "菲比寻常")),
               builder: (context, snapshot) {
                 if(!snapshot.hasData) return CircularProgressIndicator();
             return ListView(
@@ -182,21 +119,19 @@ class _PlayerState extends State<PlayerPage> {
   }
 
   Widget _buildDescSection(Music music) {
-    String description = music.description;
-    Widget textSection = Container(
-      padding: const EdgeInsets.all(32),
+    return Container(
+      padding: EdgeInsets.all(32),
       child: Text(
-        '$description',
+        '${music.album}',
         softWrap: true,
       ),
     );
-    return textSection;
   }
 
   Widget _buildTitleSection(Music music) {
-    String name = music.name;
+    String name = music.title;
     Widget titleSection = Container(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(32),
       child: Row(
         children: [
           Expanded(

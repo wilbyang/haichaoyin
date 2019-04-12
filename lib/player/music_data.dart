@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 abstract class Dao<T> {
@@ -25,10 +26,17 @@ class DatabaseProvider {
   Future _init() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'music_app.db');
-    _db = await openDatabase(path, version: 1,
-        onCreate: (Database db, int version) async {
-          await db.execute(MusicDao().createTableQuery);
-        });
+    _db = await openDatabase(path, version: 2,
+      onCreate: (Database db, int version) {
+        return db.execute(MusicDao.get.createTableQuery);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion)  {
+        print("db upgrading");
+        if (newVersion == 2) {
+          return db.execute("ALTER TABLE ${MusicDao.get.tableName} ADD COLUMN uri TEXT ");
+        }
+      }
+    );
   }
 }
 class Music {
@@ -37,7 +45,8 @@ class Music {
   String artist;
   String genre;
   String album;
-  Music(this.title, {this.artist, this.genre, this.album});
+  String uri;
+  Music({@required this.title, this.artist, this.genre, this.album, @required this.uri});
 }
 
 class MusicDao implements Dao<Music> {
@@ -47,17 +56,21 @@ class MusicDao implements Dao<Music> {
   final _columnArtist = 'artist';
   final _columnGenre = 'genre';
   final _columnAlbum = 'album';
-
+  final _columnURI = 'uri';
+  MusicDao._internal();
+  static final _instance = MusicDao._internal();
+  static final MusicDao get = _instance;
   @override
   String get createTableQuery =>
       "CREATE TABLE $tableName($_columnId INTEGER PRIMARY KEY,"
           " $_columnTitle TEXT,"
           " $_columnArtist TEXT,"
           " $_columnAlbum TEXT,"
-          " $_columnGenre TEXT)";
+          " $_columnAlbum TEXT,"
+          " $_columnURI TEXT)";
   @override
   Music fromMap(Map<String, dynamic> query) {
-    Music music = Music(query[_columnTitle]);
+    Music music = Music(title: query[_columnTitle], uri: query[_columnURI]);
     music.id = query[_columnId];
     music.artist = query[_columnArtist];
     music.album = query[_columnAlbum];
@@ -70,7 +83,8 @@ class MusicDao implements Dao<Music> {
       _columnTitle: object.title,
       _columnArtist: object.artist,
       _columnAlbum: object.album,
-      _columnGenre: object.genre
+      _columnGenre: object.genre,
+      _columnURI: object.uri
     };
   }
   @override
@@ -88,7 +102,7 @@ class MusicsDatabaseRepository implements MusicsRepository {
   static MusicsDatabaseRepository get = _instance;
 
   MusicsDatabaseRepository._internal();
-  final dao = MusicDao();
+  final dao = MusicDao.get;
   @override
   DatabaseProvider databaseProvider = DatabaseProvider.get;
   @override

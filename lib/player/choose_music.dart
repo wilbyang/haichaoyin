@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/music_data.dart';
-import 'dart:math' as math;
 
 class ChooseMusicScreen extends StatefulWidget {
   @override
@@ -13,7 +12,7 @@ class MusicState extends State<ChooseMusicScreen> {
   @override
   void initState() {
     super.initState();
-    var repository = MusicsDatabaseRepository.get;
+    final repository = MusicsDatabaseRepository.get;
 //    var insert = repository.insert(Music("匆匆那年", artist: "王菲", genre: "怀旧伤感", album: "菲比寻常"));
     repository.getMusics().then((musics) {
       setState(() {
