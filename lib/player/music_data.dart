@@ -6,7 +6,7 @@ abstract class Dao<T> {
   String get createTableQuery;
   //abstract mapping methods
   T fromMap(Map<String, dynamic> query);
-  List<T> fromList(List<Map<String,dynamic>> query);
+  List<T> fromResultSet(List<Map<String,dynamic>> query);
   Map<String, dynamic> toMap(T object);
 }
 class DatabaseProvider {
@@ -88,7 +88,7 @@ class MusicDao implements Dao<Music> {
     };
   }
   @override
-  List<Music> fromList(List<Map<String,dynamic>> query) {
+  List<Music> fromResultSet(List<Map<String,dynamic>> query) {
     List<Music> musics = List<Music>();
     for (Map map in query) {
       musics.add(fromMap(map));
@@ -130,7 +130,14 @@ class MusicsDatabaseRepository implements MusicsRepository {
   Future<List<Music>> getMusics() async {
     final db = await databaseProvider.db();
     List<Map> maps = await db.query(dao.tableName);
-    return dao.fromList(maps);
+    return dao.fromResultSet(maps);
+  }
+
+  @override
+  Future<Music> getMusic(int id) async {
+    final db = await databaseProvider.db();
+    List<Map> resultSet = await db.query(dao.tableName, where: dao._columnId + " = ?", whereArgs: [id]);
+    return dao.fromResultSet(resultSet).first;
   }
 }
 abstract class MusicsRepository {
@@ -140,4 +147,5 @@ abstract class MusicsRepository {
   Future<Music> update(Music music);
   Future<Music> delete(Music music);
   Future<List<Music>> getMusics();
+  Future<Music> getMusic(int id);
 }

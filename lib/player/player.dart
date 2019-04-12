@@ -73,7 +73,7 @@ class _PlayerState extends State<PlayerPage> {
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
           child: FutureBuilder(
-              future: MusicsDatabaseRepository.get.insert(Music(title: "匆匆那年", uri: "", artist: "王菲", genre: "伤感真情", album: "菲比寻常")),
+              future: MusicsDatabaseRepository.get.getMusic(2),
               builder: (context, snapshot) {
                 if(!snapshot.hasData) return CircularProgressIndicator();
             return ListView(
