@@ -51,18 +51,6 @@ class _PlayerState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
-
-    Widget buttonSection = Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-            ControlWidget(color: color, icon: Icons.play_arrow, label:'播放'),
-            ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
-          ],
-        ),
-      );
-
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
@@ -73,9 +61,9 @@ class _PlayerState extends State<PlayerPage> {
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
           child: FutureBuilder(
-              future: MusicsDatabaseRepository.get.getMusic(2),
-              builder: (context, snapshot) {
-                if(!snapshot.hasData) return CircularProgressIndicator();
+            future: MusicsDatabaseRepository.get.getMusic(2),
+            builder: (context, snapshot) {
+            if(!snapshot.hasData) return CircularProgressIndicator();
             return ListView(
               children: <Widget>[
                 Image.network(
@@ -83,9 +71,27 @@ class _PlayerState extends State<PlayerPage> {
                     width: 600,
                     height: 240,
                     fit: BoxFit.cover),
-                _buildTitleSection(snapshot.data),
-                buttonSection,
-                _buildDescSection(snapshot.data),
+
+                PriSecTextWidget(music: snapshot.data),
+
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
+                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放'),
+                      ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
+                    ],
+                  ),
+                ),
+
+                Container(
+                  padding: EdgeInsets.all(32),
+                  child: Text(
+                    '${snapshot.data.album}',
+                    softWrap: true,
+                  ),
+                )
               ],
             );
           })),
@@ -118,19 +124,17 @@ class _PlayerState extends State<PlayerPage> {
       ..showSnackBar(SnackBar(content: Text("$result")));
   }
 
-  Widget _buildDescSection(Music music) {
-    return Container(
-      padding: EdgeInsets.all(32),
-      child: Text(
-        '${music.album}',
-        softWrap: true,
-      ),
-    );
-  }
+}
 
-  Widget _buildTitleSection(Music music) {
-    String name = music.title;
-    Widget titleSection = Container(
+class PriSecTextWidget extends StatelessWidget {
+  final Music music;
+  const PriSecTextWidget({
+    Key key, @required this.music
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
       padding: EdgeInsets.all(32),
       child: Row(
         children: [
@@ -143,14 +147,15 @@ class _PlayerState extends State<PlayerPage> {
                 Container(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    '$name',
+                    '${music.title}',
                     style: TextStyle(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Text(
-                  'Kandersteg, Switzerland',
+                  '${music.genre}',
                   style: TextStyle(
                     color: Colors.grey[500],
                   ),
@@ -167,6 +172,5 @@ class _PlayerState extends State<PlayerPage> {
         ],
       ),
     );
-    return titleSection;
   }
 }
