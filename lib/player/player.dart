@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/choose_music.dart';
 import 'package:haichaoyin/player/music_data.dart';
@@ -135,16 +136,50 @@ class _PlayerState extends State<PlayerPage> {
     audioPlayer = null;
     super.dispose();
   }
+  Widget _buildDrawer(BuildContext context) {
+
+    return FutureBuilder<List<Music>>(
+      future: MusicsDatabaseRepository.get.getMusics(),
+      builder: (context, snapshot) {
+        if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+        var tiles = snapshot.data.map((music) {
+          return ListTile(
+            leading: Icon(Icons.music_note),
+            title: Text(music.title),
+            trailing: CircleAvatar(child: Text(music.artist),),
+          );
+        });
+
+        return Drawer(
+          child: ListView(
+            dragStartBehavior: DragStartBehavior.down,
+            children: <Widget>[
+              DrawerHeader(child: Center(child: Text('乐库'))),
+
+            ]..addAll(tiles),
+          ),
+        );
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
     return Scaffold(
       appBar: AppBar(
+        actions: <Widget>[
+          Container(
+            padding: EdgeInsets.only(right: 12.0),
+            child: IconButton(icon: Icon(Icons.add, color: Colors.white,), onPressed: null)
+          )
+        ],
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        centerTitle: true,
       ),
+      drawer: _buildDrawer(context),
       body: Center(
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
@@ -183,16 +218,7 @@ class _PlayerState extends State<PlayerPage> {
               ],
             );
           })),
-      floatingActionButton: Builder(builder: (BuildContext context) {
-        return FloatingActionButton(
-          onPressed: () => {
-//            MusicsDatabaseRepository.get.insert(Music(title: "匆匆那年", uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3", artist: "王菲", genre: "伤感真情", album:"非比寻常"))
-            _navigateAndChooseMusic(context)
-          },
-          tooltip: 'Increment',
-          child: Icon(Icons.add),
-        );
-      }), // This trailing comma makes auto-formatting nicer for build methods.
+       // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
   _navigateAndChooseMusic(BuildContext context) async {
@@ -216,6 +242,7 @@ class _PlayerState extends State<PlayerPage> {
   
 
 }
+
 
 class PriSecTextWidget extends StatelessWidget {
   final Music music;
