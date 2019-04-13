@@ -1,14 +1,15 @@
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/music_data.dart';
 
-class ChooseMusicScreen extends StatefulWidget {
+/*class ChooseMusicScreen extends StatefulWidget {
   @override
   createState() => MusicState();
-}
+}*/
 
-class MusicState extends State<ChooseMusicScreen> {
+/*class MusicState extends State<ChooseMusicScreen> {
   List<Music> items = List();
 
   @override
@@ -41,22 +42,48 @@ class MusicState extends State<ChooseMusicScreen> {
     );
 
   }
-}
+}*/
 const List<Color> colors = [Colors.brown, Colors.green, Colors.yellow, Colors.blueAccent, Colors.redAccent];
 class MusicList extends StatelessWidget {
   const MusicList(
-      {Key key, this.musics, this.onTapItem, this.onDoubleTap, this.onLongPressed})
+      {Key key, this.onTapItem, this.onDoubleTap, this.onLongPressed,
+        this.facetName, this.facetValue
+      })
       : super(key: key);
 
-  final List<Music> musics;
   final MusicRowActionCallback onTapItem;
   final MusicRowActionCallback onDoubleTap;
   final MusicRowActionCallback onLongPressed;
+  final String facetName;
+  final String facetValue;
 
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+
+    return FutureBuilder<List<Music>>(
+      future: MusicsDatabaseRepository.get.getMusicsByFacet(facetName, facetValue),
+      initialData: [],
+      builder: (context, snapshot) {
+        if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+        return ListView.builder(
+          key: const ValueKey<String>('music-list'),
+          itemCount: snapshot.data.length,
+          itemBuilder: (BuildContext context, int index) {
+            final random = Random();
+            var i = random.nextInt(5);
+            return MusicRow(
+                avatarBgColor: colors[i],
+                music: snapshot.data[index],
+                onTap: onTapItem,
+                onDoubleTap: onDoubleTap,
+                onLongPressed: onLongPressed);
+          },
+        );
+      },
+    );
+
+   /* return ListView.builder(
       key: const ValueKey<String>('music-list'),
       itemCount: musics.length,
       itemBuilder: (BuildContext context, int index) {
@@ -69,7 +96,7 @@ class MusicList extends StatelessWidget {
           onDoubleTap: onDoubleTap,
           onLongPressed: onLongPressed);
       },
-    );
+    );*/
   }
 }
 

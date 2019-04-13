@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:haichaoyin/player/player.dart';
+import 'package:haichaoyin/player/home_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PlayerPage(title: "Player")//MyHomePage(title: 'Flutter Demo Home Page'),
+      home: HomeScreen(title: "海潮音")//MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
