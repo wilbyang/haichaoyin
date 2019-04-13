@@ -87,7 +87,7 @@ class MusicDao implements Dao<Music> {
     };
   }
   @override
-  List<Music> fromResultSet(List<Map<String,dynamic>> query) {
+  List<Music> fromResultSet(List<Map<String, dynamic>> query) {
     List<Music> musics = List<Music>();
     for (Map map in query) {
       musics.add(fromMap(map));
@@ -138,6 +138,29 @@ class MusicsDatabaseRepository implements MusicsRepository {
     List<Map> resultSet = await db.query(dao.tableName, where: dao._columnId + " = ?", whereArgs: [id]);
     return dao.fromResultSet(resultSet).first;
   }
+
+  @override
+  Future<List<String>> getMusicArtistFacet() async {
+    final db = await databaseProvider.db();
+    List<String> artistFacet = List<String>();
+    List<Map<String, dynamic>> maps = await db.rawQuery("SELECT DISTINCT artist FROM musics");
+    return maps.map((map) => map["artist"] as String).toList();
+  }
+
+  @override
+  Future<Map<String, List<String>>> getMusicFacet() async {
+    Map<String, List<String>> ret = Map<String, List<String>>();
+    ret["artist"] = await getMusicArtistFacet();
+    ret["genre"] = await getMusicGenreFacet();
+    return ret;
+  }
+  @override
+  Future<List<String>> getMusicGenreFacet() async {
+    final db = await databaseProvider.db();
+    List<String> artistFacet = List<String>();
+    List<Map<String, dynamic>> maps = await db.rawQuery("SELECT DISTINCT genre FROM musics");
+    return maps.map((map) => map["genre"] as String).toList();
+  }
 }
 abstract class MusicsRepository {
   DatabaseProvider databaseProvider;
@@ -147,4 +170,9 @@ abstract class MusicsRepository {
   Future<Music> delete(Music music);
   Future<List<Music>> getMusics();
   Future<Music> getMusic(int id);
+
+  Future<List<String>> getMusicArtistFacet();
+  Future<List<String>> getMusicGenreFacet();
+  Future<Map<String, List<String>>> getMusicFacet();
+
 }

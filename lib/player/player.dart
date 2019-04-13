@@ -80,6 +80,7 @@ class _PlayerState extends State<PlayerPage> {
   StreamSubscription _audioPlayerStateSubscription;
 
   Music chosenMusic;
+  String chosenFacet;
 
   @override
   void initState() {
@@ -139,18 +140,49 @@ class _PlayerState extends State<PlayerPage> {
   }
   Widget _buildDrawer(BuildContext context) {
 
-    return FutureBuilder<List<Music>>(
-      future: MusicsDatabaseRepository.get.getMusics(),
+    return FutureBuilder<Map<String, List<String>>>(
+      future: MusicsDatabaseRepository.get.getMusicFacet(),
       builder: (context, snapshot) {
         if (snapshot.data == null) return Center(child: CircularProgressIndicator());
-        var tiles = snapshot.data.map((music) {
-          return ListTile(
-            leading: Icon(Icons.music_note),
-            title: Text(music.title),
-            trailing: CircleAvatar(child: Text(music.artist),),
-            onTap: () => setState(() => chosenMusic = music),
+        final artistTiles = snapshot.data["artist"].map((facetItem) {
+          return InkWell(
+            child: CircleAvatar(child: Text(facetItem),),
+            onTap: () => setState((){
+
+              chosenFacet = facetItem;
+            }),
           );
         });
+
+        final artistTilesWidget = Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+          child: Wrap(
+            children: <Widget>[]..addAll(artistTiles),
+            spacing: 12.0,
+            alignment: WrapAlignment.start,
+          ),
+        );
+
+
+        final genreTiles = snapshot.data["genre"].map((facetItem) {
+
+          return InkWell(
+            child: Chip(label: Text(facetItem)),
+            onTap: () => setState((){
+
+              chosenFacet = facetItem;
+            }),
+          );
+        });
+
+        final genreTilesWidget = Container(
+          padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+          child: Wrap(
+            children: <Widget>[]..addAll(genreTiles),
+            spacing: 8.0,
+            alignment: WrapAlignment.start,
+          ),
+        );
 
         return Drawer(
           child: ListView(
@@ -158,7 +190,9 @@ class _PlayerState extends State<PlayerPage> {
             children: <Widget>[
               DrawerHeader(child: Center(child: Text('乐库'))),
 
-            ]..addAll(tiles),
+            ]..add(artistTilesWidget)
+             ..add(Divider())
+             ..add(genreTilesWidget)
           ),
         );
       }
@@ -190,7 +224,7 @@ class _PlayerState extends State<PlayerPage> {
         actions: <Widget>[
           Container(
             padding: EdgeInsets.only(right: 12.0),
-            child: IconButton(icon: Icon(Icons.add, color: Colors.white,), onPressed: () => _createMusic())
+            child: IconButton(icon: Icon(Icons.add, color: Colors.white,), onPressed: null)
           )
         ],
         // Here we take the value from the MyHomePage object that was created by
