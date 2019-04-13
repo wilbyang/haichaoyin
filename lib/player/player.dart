@@ -108,7 +108,7 @@ class _PlayerState extends State<PlayerPage> {
   }
 
   Future<void> play(String uri) async {
-    print(uri);
+//    var audio = AudioPlayer();
     await audioPlayer.play(uri);
     setState(() => playerState = PlayerState.playing);
   }
@@ -149,7 +149,7 @@ class _PlayerState extends State<PlayerPage> {
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
           child: FutureBuilder(
-            future: MusicsDatabaseRepository.get.getMusic(2),
+            future: MusicsDatabaseRepository.get.getMusic(1),
             builder: (context, snapshot) {
             if(!snapshot.hasData) return CircularProgressIndicator();
             return ListView(
@@ -167,7 +167,7 @@ class _PlayerState extends State<PlayerPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放', onTapAction:() => play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3")),
+                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放', onTapAction: () => play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3")),
                       ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
                     ],
                   ),
@@ -186,6 +186,7 @@ class _PlayerState extends State<PlayerPage> {
       floatingActionButton: Builder(builder: (BuildContext context) {
         return FloatingActionButton(
           onPressed: () => {
+//            MusicsDatabaseRepository.get.insert(Music(title: "匆匆那年", uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3", artist: "王菲", genre: "伤感真情", album:"非比寻常"))
             _navigateAndChooseMusic(context)
           },
           tooltip: 'Increment',

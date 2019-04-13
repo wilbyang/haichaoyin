@@ -6,7 +6,7 @@ abstract class Dao<T> {
   String get createTableQuery;
   //abstract mapping methods
   T fromMap(Map<String, dynamic> query);
-  List<T> fromResultSet(List<Map<String,dynamic>> query);
+  List<T> fromResultSet(List<Map<String, dynamic>> query);
   Map<String, dynamic> toMap(T object);
 }
 class DatabaseProvider {
@@ -31,7 +31,6 @@ class DatabaseProvider {
         return db.execute(MusicDao.get.createTableQuery);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion)  {
-        print("db upgrading");
         if (newVersion == 2) {
           return db.execute("ALTER TABLE ${MusicDao.get.tableName} ADD COLUMN uri TEXT ");
         }
@@ -46,7 +45,7 @@ class Music {
   String genre;
   String album;
   String uri;
-  Music({@required this.title, this.artist, this.genre, this.album, @required this.uri});
+  Music({@required this.title, @required this.uri, this.artist, this.genre, this.album});
 }
 
 class MusicDao implements Dao<Music> {
@@ -66,7 +65,7 @@ class MusicDao implements Dao<Music> {
           " $_columnTitle TEXT,"
           " $_columnArtist TEXT,"
           " $_columnAlbum TEXT,"
-          " $_columnAlbum TEXT,"
+          " $_columnGenre TEXT,"
           " $_columnURI TEXT)";
   @override
   Music fromMap(Map<String, dynamic> query) {

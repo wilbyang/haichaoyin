@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/music_data.dart';
 
@@ -13,7 +15,6 @@ class MusicState extends State<ChooseMusicScreen> {
   void initState() {
     super.initState();
     final repository = MusicsDatabaseRepository.get;
-//    var insert = repository.insert(Music("匆匆那年", artist: "王菲", genre: "怀旧伤感", album: "菲比寻常"));
     repository.getMusics().then((musics) {
       setState(() {
         items = musics;
@@ -41,7 +42,7 @@ class MusicState extends State<ChooseMusicScreen> {
 
   }
 }
-
+const List<Color> colors = [Colors.brown, Colors.green, Colors.yellow, Colors.blueAccent, Colors.redAccent];
 class MusicList extends StatelessWidget {
   const MusicList(
       {Key key, this.musics, this.onTapItem, this.onDoubleTap, this.onLongPressed})
@@ -52,18 +53,21 @@ class MusicList extends StatelessWidget {
   final MusicRowActionCallback onDoubleTap;
   final MusicRowActionCallback onLongPressed;
 
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       key: const ValueKey<String>('music-list'),
-      itemExtent: MusicRow.kHeight,
       itemCount: musics.length,
       itemBuilder: (BuildContext context, int index) {
+        final random = Random();
+        var i = random.nextInt(5);
         return MusicRow(
-            music: musics[index],
-            onTap: onTapItem,
-            onDoubleTap: onDoubleTap,
-            onLongPressed: onLongPressed);
+          avatarBgColor: colors[i],
+          music: musics[index],
+          onTap: onTapItem,
+          onDoubleTap: onDoubleTap,
+          onLongPressed: onLongPressed);
       },
     );
   }
@@ -72,15 +76,14 @@ class MusicList extends StatelessWidget {
 typedef MusicRowActionCallback = void Function(Music music);
 
 class MusicRow extends StatelessWidget {
-  MusicRow({this.music, this.onTap, this.onDoubleTap, this.onLongPressed})
+  MusicRow({this.music, this.onTap, this.onDoubleTap, this.onLongPressed, this.avatarBgColor})
       : super(key: ObjectKey(music));
 
   final Music music;
+  final Color avatarBgColor;
   final MusicRowActionCallback onTap;
   final MusicRowActionCallback onDoubleTap;
   final MusicRowActionCallback onLongPressed;
-
-  static const double kHeight = 79.0;
 
   GestureTapCallback _getHandler(MusicRowActionCallback callback) {
     return callback == null ? null : () => callback(music);
@@ -88,25 +91,38 @@ class MusicRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String title = '\$${music.title}';
-    String artist = '${music.artist}';
     return InkWell(
         onTap: _getHandler(onTap),
         onDoubleTap: _getHandler(onDoubleTap),
         onLongPress: _getHandler(onLongPressed),
         child: Container(
-            padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 20.0),
+            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 40.0),
             decoration: BoxDecoration(
                 border: Border(
                     bottom: BorderSide(color: Theme.of(context).dividerColor)
                 )
             ),
             child: Row(
-                children: <Widget>[
-                  Text(music.artist ?? ''),
-                  Text(title, textAlign: TextAlign.right),
-                  Text(artist, textAlign: TextAlign.right),
-                ]
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundColor: avatarBgColor,
+                  child: Text(music.artist ?? '', style: TextStyle(
+                      fontSize: 12.0
+                  ),),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(music.title, style: TextStyle(
+                      fontSize: 16.0,
+                      letterSpacing: 1.2
+                    ),),
+                    Text(music.album),
+                  ],
+                ),
+              ]
             )
         ));
   }
