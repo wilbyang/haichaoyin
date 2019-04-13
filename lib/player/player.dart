@@ -40,7 +40,6 @@ class ControlWidget extends StatelessWidget {
           onTap: onTapAction,
           child: Icon(icon, color: color),
         ),
-
         Container(
           margin: const EdgeInsets.only(top: 8),
           child: Text(
@@ -79,6 +78,8 @@ class _PlayerState extends State<PlayerPage> {
 
   StreamSubscription _positionSubscription;
   StreamSubscription _audioPlayerStateSubscription;
+
+  Music chosenMusic;
 
   @override
   void initState() {
@@ -147,6 +148,7 @@ class _PlayerState extends State<PlayerPage> {
             leading: Icon(Icons.music_note),
             title: Text(music.title),
             trailing: CircleAvatar(child: Text(music.artist),),
+            onTap: () => setState(() => chosenMusic = music),
           );
         });
 
@@ -162,7 +164,24 @@ class _PlayerState extends State<PlayerPage> {
       }
     );
   }
+  Future<void> _createMusic() async {
+    await MusicsDatabaseRepository.get.insert(
+      Music(title: "匆匆那年",
+        uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3",
+        genre: "嘈杂",
+        artist: "王菲",
+        album: "菲比寻常"
+    ));
 
+    await MusicsDatabaseRepository.get.insert(
+      Music(title: "故乡",
+          uri: "https://sample-videos.com/audio/mp3/wave.mp3",
+          genre: "自由抒情",
+          artist: "许巍",
+          album: "蓝莲花"
+      ));
+
+  }
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
@@ -171,7 +190,7 @@ class _PlayerState extends State<PlayerPage> {
         actions: <Widget>[
           Container(
             padding: EdgeInsets.only(right: 12.0),
-            child: IconButton(icon: Icon(Icons.add, color: Colors.white,), onPressed: null)
+            child: IconButton(icon: Icon(Icons.add, color: Colors.white,), onPressed: () => _createMusic())
           )
         ],
         // Here we take the value from the MyHomePage object that was created by
@@ -183,41 +202,31 @@ class _PlayerState extends State<PlayerPage> {
       body: Center(
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
-          child: FutureBuilder(
-            future: MusicsDatabaseRepository.get.getMusic(1),
-            builder: (context, snapshot) {
-            if(!snapshot.hasData) return CircularProgressIndicator();
-            return ListView(
-              children: <Widget>[
-                Image.network(
-                    "https://images.unsplash.com/photo-1471115853179-bb1d604434e0?dpr=1&auto=format&fit=crop&w=767&h=583&q=80&cs=tinysrgb&crop=",
-                    width: 600,
-                    height: 240,
-                    fit: BoxFit.cover),
+        child:ListView(
+        children: <Widget>[
+          Image.network(
+            "https://images.unsplash.com/photo-1471115853179-bb1d604434e0?dpr=1&auto=format&fit=crop&w=767&h=583&q=80&cs=tinysrgb&crop=",
+            width: 600,
+            height: 240,
+            fit: BoxFit.cover),
+        ]..addAll(chosenMusic == null? []:[
 
-                PriSecTextWidget(music: snapshot.data),
+          PriSecTextWidget(music: chosenMusic),
 
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-                      ControlWidget(color: color, icon: Icons.play_arrow, label:'播放', onTapAction: () => play("https://sample-videos.com/audio/mp3/crowd-cheering.mp3")),
-                      ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
-                    ],
-                  ),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
+                ControlWidget(color: color, icon: Icons.play_arrow, label:'播放',
+                    onTapAction: () => play(chosenMusic.uri)
                 ),
-
-                Container(
-                  padding: EdgeInsets.all(32),
-                  child: Text(
-                    '${snapshot.data.album}',
-                    softWrap: true,
-                  ),
-                )
+                ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
               ],
-            );
-          })),
+            ),
+          ),
+        ]),
+      )),
        // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
@@ -282,11 +291,7 @@ class PriSecTextWidget extends StatelessWidget {
             ),
           ),
           /*3*/
-          Icon(
-            Icons.star,
-            color: Colors.red[500],
-          ),
-          Text('41'),
+          Chip(label: Text(music.album, style: TextStyle(color: Colors.white),), backgroundColor: Colors.redAccent.shade100,),
         ],
       ),
     );
