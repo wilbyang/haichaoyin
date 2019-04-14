@@ -68,12 +68,12 @@ class MusicDao implements Dao<Music> {
           " $_columnGenre TEXT,"
           " $_columnURI TEXT)";
   @override
-  Music fromMap(Map<String, dynamic> query) {
-    Music music = Music(title: query[_columnTitle], uri: query[_columnURI]);
-    music.id = query[_columnId];
-    music.artist = query[_columnArtist];
-    music.album = query[_columnAlbum];
-    music.genre = query[_columnGenre];
+  Music fromMap(Map<String, dynamic> map) {
+    Music music = Music(title: map[_columnTitle], uri: map[_columnURI]);
+    music.id = map[_columnId];
+    music.artist = map[_columnArtist];
+    music.album = map[_columnAlbum];
+    music.genre = map[_columnGenre];
     return music;
   }
   @override
@@ -87,12 +87,16 @@ class MusicDao implements Dao<Music> {
     };
   }
   @override
-  List<Music> fromResultSet(List<Map<String, dynamic>> query) {
-    List<Music> musics = List<Music>();
-    for (Map map in query) {
+  List<Music> fromResultSet(List<Map<String, dynamic>> resultSet) {
+    /*List<Music> musics = List<Music>();
+
+    for (Map map in resultSet) {
       musics.add(fromMap(map));
     }
-    return musics;
+    return musics;*/
+    return List.generate(resultSet.length, (i) {
+      return fromMap(resultSet[i]);
+    });
   }
 }
 
@@ -148,7 +152,6 @@ class MusicsDatabaseRepository implements MusicsRepository {
   @override
   Future<List<String>> getMusicArtistFacet() async {
     final db = await databaseProvider.db();
-    List<String> artistFacet = List<String>();
     List<Map<String, dynamic>> maps = await db.rawQuery("SELECT DISTINCT artist FROM musics");
     return maps.map((map) => map["artist"] as String).toList();
   }
@@ -163,7 +166,6 @@ class MusicsDatabaseRepository implements MusicsRepository {
   @override
   Future<List<String>> getMusicGenreFacet() async {
     final db = await databaseProvider.db();
-    List<String> artistFacet = List<String>();
     List<Map<String, dynamic>> maps = await db.rawQuery("SELECT DISTINCT genre FROM musics");
     return maps.map((map) => map["genre"] as String).toList();
   }
