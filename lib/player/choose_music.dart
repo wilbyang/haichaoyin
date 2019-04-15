@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/music_data.dart';
+import 'package:haichaoyin/trial/head_stream.dart';
 
 const List<Color> colors = [
   Colors.brown,
@@ -76,6 +77,41 @@ class _MusicList2State extends State<MusicList2> {
     if (oldWidget.facetValue != widget.facetValue || oldWidget.facetName != widget.facetName) {
       loadMusicByFacet = MusicsDatabaseRepository.get.getMusicsByFacet(widget.facetName, widget.facetValue);
     }
+  }
+}
+class MusicList3 extends StatelessWidget {
+  const MusicList3(
+      {Key key,
+        this.onTapItem,
+        this.onDoubleTap,
+        this.onLongPressed,
+        this.musics
+      }) : super(key: key);
+
+  final MusicRowActionCallback onTapItem;
+  final MusicRowActionCallback onDoubleTap;
+  final MusicRowActionCallback onLongPressed;
+  final List<Music> musics;
+
+//  final Future<List<Music>> loadMusicByFacet;
+
+  @override
+  Widget build(BuildContext context) {return ListView.builder(
+    shrinkWrap: true,
+    key: const ValueKey<String>('music-list'),
+    itemCount: musics.length,
+    itemBuilder: (BuildContext context, int index) {
+      final random = Random();
+      var i = random.nextInt(5);
+      return MusicRow(
+        avatarBgColor: colors[i],
+        music: musics[index],
+        onTap: onTapItem,
+        onDoubleTap: onDoubleTap,
+        onLongPressed: onLongPressed,
+      );
+    },
+  );
   }
 }
 class MusicList extends StatelessWidget {

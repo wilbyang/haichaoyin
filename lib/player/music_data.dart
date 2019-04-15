@@ -131,6 +131,7 @@ class MusicsDatabaseRepository implements MusicsRepository {
   }
   @override
   Future<List<Music>> getMusicsByFacet(String facetName, String facetValue) async {
+
     final db = await databaseProvider.db();
     List<Map> resultSet = await db.query(dao.tableName, where: facetName + " = ?", whereArgs: [facetValue]);
     return dao.fromResultSet(resultSet);

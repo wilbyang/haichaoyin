@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/home_screen.dart';
-
-void main() => runApp(MyApp());
+import 'package:haichaoyin/trial/head_stream.dart';
+void main() => runApp(MyStream());
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
