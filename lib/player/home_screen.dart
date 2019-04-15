@@ -4,25 +4,31 @@ import 'package:async/async.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/choose_music.dart';
+import 'package:haichaoyin/player/music_bloc.dart';
 import 'package:haichaoyin/player/music_data.dart';
 import 'package:haichaoyin/player/player.dart';
 
-class HomeScreen extends StatefulWidget {
-  final String title;
-  HomeScreen({Key key, this.title}) : super(key: key);
-  @override
-  State<StatefulWidget> createState() {
-    return _HomeScreenState();
-    ;
-  }
-}
 
-class _HomeScreenState extends State<HomeScreen> {
-  Music chosenMusic;
-  String chosenFacetName;
-  String chosenFacetValue;
-  final AsyncMemoizer _memoizer = AsyncMemoizer();
+class HomeScreen extends StatelessWidget{
+
+  Future<void> _createMusic() async {
+    await MusicsDatabaseRepository.get.insert(Music(
+        title: "匆匆那年",
+        uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3",
+        genre: "嘈杂",
+        artist: "王菲",
+        album: "菲比寻常"));
+
+    await MusicsDatabaseRepository.get.insert(Music(
+        title: "故乡",
+        uri: "https://sample-videos.com/audio/mp3/wave.mp3",
+        genre: "自由抒情",
+        artist: "许巍",
+        album: "蓝莲花"));
+  }
+
   Widget _buildDrawer(BuildContext context) {
+    final bloc = Provider.of(context);
     return FutureBuilder<Map<String, List<String>>>(
       future: MusicsDatabaseRepository.get.getMusicFacet(),
       builder: (context, snapshot) {
@@ -33,12 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CircleAvatar(
               child: Text(facetItem),
             ),
-            onTap: () => setState(
-                  () {
-                    chosenFacetValue = facetItem;
-                    chosenFacetName = "artist";
-                  },
-                ),
+            onTap: () => bloc.changeFact('artist:$facetItem'),
           );
         });
 
@@ -54,12 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final genreTiles = snapshot.data["genre"].map((facetItem) {
           return InkWell(
             child: Chip(label: Text(facetItem)),
-            onTap: () => setState(
-                  () {
-                    chosenFacetValue = facetItem;
-                    chosenFacetName = "genre";
-                  },
-                ),
+            onTap: () => bloc.changeFact('genre:$facetItem'),
           );
         });
 
@@ -87,35 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _createMusic() async {
-    await MusicsDatabaseRepository.get.insert(Music(
-        title: "匆匆那年",
-        uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3",
-        genre: "嘈杂",
-        artist: "王菲",
-        album: "菲比寻常"));
-
-    await MusicsDatabaseRepository.get.insert(Music(
-        title: "故乡",
-        uri: "https://sample-videos.com/audio/mp3/wave.mp3",
-        genre: "自由抒情",
-        artist: "许巍",
-        album: "蓝莲花"));
-  }
-
-  void chooseMusic(Music music) {
-    setState(() {
-      chosenMusic = music;
-    });
-  }
-  Future<List<Music>> _loadMusicByFacet(String facetName, String facetValue) async {
-    return _memoizer.runOnce(() async {
-      List<Music> musics = await MusicsDatabaseRepository.get.getMusicsByFacet(facetName, facetValue);
-      return musics;
-    });
-  }
   @override
   Widget build(BuildContext context) {
+    final bloc = Provider.of(context);
     Color color = Theme.of(context).primaryColor;
 
     final children = <Widget>[
@@ -127,26 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
-    Widget w = Text("还没选择乐曲");
-    if (chosenFacetName != null &&
-        chosenFacetName.isNotEmpty &&
-        chosenFacetValue != null &&
-        chosenFacetValue.isNotEmpty) {
-      w = MusicList2(
-//        loadMusicByFacet: _loadMusicByFacet(chosenFacetName, chosenFacetValue),
-        facetValue: chosenFacetValue,
-        facetName: chosenFacetName,
-        onTapItem: chooseMusic,
-      );
-    }
 
-    Widget player = Container(
-      width: 0.0,
-      height: 0.0,
-    );
-    if (chosenMusic != null) {
-      player = MyAudioPlayer(music: chosenMusic);
-    }
+
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
@@ -161,14 +113,29 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         ],
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(""),
         centerTitle: true,
       ),
       drawer: _buildDrawer(context),
       body: ListView(
-        children: <Widget>[w, player],
+        children: <Widget>[StreamBuilder<List<Music>>(
+          stream: bloc.musics,
+          builder: (context, snapshot) {
+            if (snapshot.data == null) return Text("客官还没有选中曲子");
+            else {
+              return MusicList3(musics: snapshot.data, onTapItem: bloc.chooseMusic,);
+            }
+          },
+        ), StreamBuilder<Music>(
+          stream: bloc.chosenMusic,
+          builder: (context, snapshot) {
+            if (snapshot.data == null)
+              return Container(width: 0.0, height: 0.0,);
+            else {
+              return MyAudioPlayer(music: snapshot.data);
+            }
+          },
+        )],
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
     );

@@ -24,7 +24,7 @@ class DatabaseProvider {
   }
 
   Future _init() async {
-    var databasesPath = await getDatabasesPath();
+    final databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'music_app.db');
     _db = await openDatabase(path, version: 2,
       onCreate: (Database db, int version) {
@@ -88,12 +88,6 @@ class MusicDao implements Dao<Music> {
   }
   @override
   List<Music> fromResultSet(List<Map<String, dynamic>> resultSet) {
-    /*List<Music> musics = List<Music>();
-
-    for (Map map in resultSet) {
-      musics.add(fromMap(map));
-    }
-    return musics;*/
     return List.generate(resultSet.length, (i) {
       return fromMap(resultSet[i]);
     });
@@ -130,8 +124,12 @@ class MusicsDatabaseRepository implements MusicsRepository {
     return music;
   }
   @override
-  Future<List<Music>> getMusicsByFacet(String facetName, String facetValue) async {
-
+  Future<List<Music>> getMusicsByFacet(String facet) async {
+    if (facet == null || facet.isEmpty) {
+      return Future.value(null);
+    }
+    final facetName = facet.split(":")[0];
+    final facetValue = facet.split(":")[1];
     final db = await databaseProvider.db();
     List<Map> resultSet = await db.query(dao.tableName, where: facetName + " = ?", whereArgs: [facetValue]);
     return dao.fromResultSet(resultSet);
@@ -178,7 +176,7 @@ abstract class MusicsRepository {
   Future<Music> update(Music music);
   Future<Music> delete(Music music);
   Future<List<Music>> getMusics();
-  Future<List<Music>> getMusicsByFacet(String facetName, String facetValue);
+  Future<List<Music>> getMusicsByFacet(String facet);
   Future<Music> getMusic(int id);
 
   Future<List<String>> getMusicArtistFacet();

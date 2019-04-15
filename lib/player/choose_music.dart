@@ -16,16 +16,13 @@ class MusicList2 extends StatefulWidget {
   final MusicRowActionCallback onTapItem;
   final MusicRowActionCallback onDoubleTap;
   final MusicRowActionCallback onLongPressed;
-  final String facetName;
-  final String facetValue;
+  final String facet;
   const MusicList2(
       {Key key,
         this.onTapItem,
         this.onDoubleTap,
         this.onLongPressed,
-//      this.loadMusicByFacet,
-        this.facetName,
-        this.facetValue}) : super(key: key);
+        this.facet}) : super(key: key);
   @override
   State<StatefulWidget> createState() {
 
@@ -69,13 +66,13 @@ class _MusicList2State extends State<MusicList2> {
   @override
   void initState() {
     super.initState();
-    loadMusicByFacet = MusicsDatabaseRepository.get.getMusicsByFacet(widget.facetName, widget.facetValue);
+    loadMusicByFacet = MusicsDatabaseRepository.get.getMusicsByFacet(widget.facet);
   }
   @override
   void didUpdateWidget(MusicList2 oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.facetValue != widget.facetValue || oldWidget.facetName != widget.facetName) {
-      loadMusicByFacet = MusicsDatabaseRepository.get.getMusicsByFacet(widget.facetName, widget.facetValue);
+    if (oldWidget.facet != widget.facet) {
+      loadMusicByFacet = MusicsDatabaseRepository.get.getMusicsByFacet(widget.facet);
     }
   }
 }
@@ -121,21 +118,19 @@ class MusicList extends StatelessWidget {
       this.onDoubleTap,
       this.onLongPressed,
 //      this.loadMusicByFacet,
-      this.facetName,
-      this.facetValue}) : super(key: key);
+      this.facet}) : super(key: key);
 
   final MusicRowActionCallback onTapItem;
   final MusicRowActionCallback onDoubleTap;
   final MusicRowActionCallback onLongPressed;
-  final String facetName;
-  final String facetValue;
+  final String facet;
 //  final Future<List<Music>> loadMusicByFacet;
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Music>>(
       future:
-        MusicsDatabaseRepository.get.getMusicsByFacet(facetName, facetValue),
+        MusicsDatabaseRepository.get.getMusicsByFacet(facet),
       initialData: [],
       builder: (context, snapshot) {
         if (snapshot.data == null)
