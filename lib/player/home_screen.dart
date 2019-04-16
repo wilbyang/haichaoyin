@@ -1,30 +1,32 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:async/async.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:haichaoyin/player/choose_music.dart';
+import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/music_bloc.dart';
 import 'package:haichaoyin/player/music_data.dart';
 import 'package:haichaoyin/player/player.dart';
+import 'package:qrcode_reader/qrcode_reader.dart';
 
-
-class HomeScreen extends StatelessWidget{
-
+class HomeScreen extends StatelessWidget {
   Future<void> _createMusic() async {
     await MusicsDatabaseRepository.get.insert(Music(
-        title: "匆匆那年",
-        uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3",
-        genre: "嘈杂",
-        artist: "王菲",
-        album: "菲比寻常"));
+      title: "棋子",
+      uri: "https://sample-videos.com/audio/mp3/crowd-cheering.mp3",
+      genre: "嘈杂",
+      artist: "王菲",
+      album: "旋转木马",
+    ));
 
     await MusicsDatabaseRepository.get.insert(Music(
-        title: "故乡",
-        uri: "https://sample-videos.com/audio/mp3/wave.mp3",
-        genre: "自由抒情",
-        artist: "许巍",
-        album: "蓝莲花"));
+      title: "故乡",
+      uri: "https://sample-videos.com/audio/mp3/wave.mp3",
+      genre: "自由抒情",
+      artist: "许巍",
+      album: "蓝莲花",
+    ));
   }
 
   Widget _buildDrawer(BuildContext context) {
@@ -82,22 +84,22 @@ class HomeScreen extends StatelessWidget{
       },
     );
   }
+  Music parseJson(String jsonTxt) {
+    final parsed = json.decode(jsonTxt);
 
+    return Music.fromMap(parsed);
+  }
   @override
   Widget build(BuildContext context) {
     final bloc = Provider.of(context);
     Color color = Theme.of(context).primaryColor;
 
-    final children = <Widget>[
-      Image.network(
-        "https://images.unsplash.com/photo-1471115853179-bb1d604434e0?dpr=1&auto=format&fit=crop&w=767&h=583&q=80&cs=tinysrgb&crop=",
-        width: 600,
-        height: 240,
-        fit: BoxFit.cover,
-      ),
-    ];
-
-
+    Widget poster = Image.network(
+      "https://images.unsplash.com/photo-1471115853179-bb1d604434e0?dpr=1&auto=format&fit=crop&w=767&h=583&q=80&cs=tinysrgb&crop=",
+      width: 600,
+      height: 240,
+      fit: BoxFit.cover,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -109,7 +111,18 @@ class HomeScreen extends StatelessWidget{
                 Icons.add,
                 color: Colors.white,
               ),
-              onPressed: null,
+              onPressed: () async {
+                final result = await QRCodeReader().scan();
+                final music = parseJson(result);
+                bloc.changeFlash("下载中");
+                final localPath = await Music.downloadMusic(music);
+                music.local_uri = localPath;
+                MusicsDatabaseRepository.get.insert(music).then((music) {
+                  bloc.changeFlash("下载完成");
+                  final snackBar = SnackBar(content: Text('下载完成'));
+                  Scaffold.of(context).showSnackBar(snackBar);
+                });
+              },
             ),
           )
         ],
@@ -117,25 +130,36 @@ class HomeScreen extends StatelessWidget{
         centerTitle: true,
       ),
       drawer: _buildDrawer(context),
-      body: ListView(
-        children: <Widget>[StreamBuilder<List<Music>>(
-          stream: bloc.musics,
-          builder: (context, snapshot) {
-            if (snapshot.data == null) return Text("客官还没有选中曲子");
-            else {
-              return MusicList3(musics: snapshot.data, onTapItem: bloc.chooseMusic,);
-            }
-          },
-        ), StreamBuilder<Music>(
-          stream: bloc.chosenMusic,
-          builder: (context, snapshot) {
-            if (snapshot.data == null)
-              return Container(width: 0.0, height: 0.0,);
-            else {
-              return MyAudioPlayer(music: snapshot.data);
-            }
-          },
-        )],
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          StreamBuilder<List<Music>>(
+            stream: bloc.musics,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData)
+                return Center(child: Text("客官还没有选中曲子"),);
+              else {
+                return MusicList3(
+                  musics: snapshot.data,
+                  onTapItem: bloc.chooseMusic,
+                );
+              }
+            },
+          ),
+          StreamBuilder<Music>(
+            stream: bloc.chosenMusic,
+            builder: (context, snapshot) {
+              if (snapshot.data == null)
+                return Container(
+                  width: 0.0,
+                  height: 0.0,
+                );
+              else {
+                return MyAudioPlayer(music: snapshot.data);
+              }
+            },
+          ),
+        ],
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
     );

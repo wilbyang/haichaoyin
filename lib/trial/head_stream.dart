@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:tuple/tuple.dart';
 import 'package:flutter/material.dart';
-import 'package:haichaoyin/player/choose_music.dart';
+import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/music_data.dart';
 import 'package:rxdart/rxdart.dart';
 class MyStream extends StatelessWidget {

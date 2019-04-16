@@ -55,6 +55,7 @@ class ControlWidget extends StatelessWidget {
 }
 enum PlayerState { stopped, playing, paused }
 class _PlayerState extends State<MyAudioPlayer> {
+
   
   AudioPlayer audioPlayer;
   Duration duration;
@@ -83,12 +84,14 @@ class _PlayerState extends State<MyAudioPlayer> {
   void initState() {
     super.initState();
     audioPlayer = AudioPlayer();
+
     _positionSubscription = audioPlayer.onAudioPositionChanged
         .listen((p) => setState(() => position = p));
+
     _audioPlayerStateSubscription =
         audioPlayer.onPlayerStateChanged.listen((s) {
           if (s == AudioPlayerState.PLAYING) {
-            setState(() => duration = audioPlayer.duration);
+            //setState(() => duration = audioPlayer.duration);
           } else if (s == AudioPlayerState.STOPPED) {
             onComplete();
             setState(() {
@@ -109,7 +112,7 @@ class _PlayerState extends State<MyAudioPlayer> {
 
   Future<void> play() async {
 //    var audio = AudioPlayer();
-    await audioPlayer.play(widget.music.uri);
+    await audioPlayer.play(widget.music.local_uri, isLocal: true);
     setState(() => playerState = PlayerState.playing);
   }
 
@@ -122,7 +125,7 @@ class _PlayerState extends State<MyAudioPlayer> {
     await audioPlayer.stop();
     setState(() {
       playerState = PlayerState.stopped;
-      position = new Duration();
+      position = Duration();
     });
   }
 
@@ -140,63 +143,43 @@ class _PlayerState extends State<MyAudioPlayer> {
   Widget build(BuildContext context) {
     final music = widget.music;
     final color = Colors.blueAccent;
-    var children = [
-
-      PriSecTextWidget(music: music),
-
-      Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-            ControlWidget(color: color, icon: Icons.play_arrow, label:'播放',
-                onTapAction: () => play()
-            ),
-            ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
-          ],
-        ),
-      ),
-    ];
     return Column(
-      children: <Widget>[]..addAll(children)
-    );
-  }
+      children: <Widget>[
 
-  /*_navigateAndChooseMusic(BuildContext context) async {
-    // Navigator.push returns a Future that will complete after we call
-    // Navigator.pop on the Selection Screen!
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
+        PriSecTextWidget(music: music),
 
-        builder: (context) => ChooseMusicScreen()
-      ),
-    );
-    if (result == null) return;
-    // After the Selection Screen returns a result, hide any previous snackbars
-    // and show the new result!
-    Scaffold.of(context)
-      ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text("$result")));
-  }
-  ..addAll(chosenMusic == null? []:[
-
-          PriSecTextWidget(music: chosenMusic),
-
-          Container(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
-                ControlWidget(color: color, icon: Icons.play_arrow, label:'播放',
-                    onTapAction: () => play(chosenMusic.uri)
-                ),
-                ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
-              ],
-            ),
+        Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ControlWidget(color: color, icon: Icons.skip_previous, label:'上一曲'),
+              ControlWidget(color: color, icon: Icons.play_arrow, label:'播放',
+                  onTapAction: () => play()
+              ),
+              ControlWidget(color: color, icon: Icons.skip_next, label:'下一曲')
+            ],
           ),
-        ])
-*/
+        ),
+        LinearProgressIndicator(value: position.inMilliseconds/audioPlayer.duration.inMilliseconds,)
+      ]
+    );
+  }
+
+  @override
+  void didUpdateWidget(MyAudioPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final music = widget.music;
+    if (oldWidget.music != music) {
+      audioPlayer.stop().then((void _) {
+        if (music.local_uri != null && music.local_uri.isNotEmpty) {
+          audioPlayer.play(music.local_uri, isLocal: true);
+        } else {
+          audioPlayer.play(music.uri);
+        }
+
+      });
+    }
+  }
 
 }
 

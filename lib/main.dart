@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:haichaoyin/player/choose_music.dart';
+import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/home_screen.dart';
 import 'package:haichaoyin/player/music_bloc.dart';
 import 'package:haichaoyin/player/music_data.dart';

@@ -1,14 +1,27 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-abstract class Dao<T> {
-  //queries
-  String get createTableQuery;
-  //abstract mapping methods
-  T fromMap(Map<String, dynamic> query);
-  List<T> fromResultSet(List<Map<String, dynamic>> query);
-  Map<String, dynamic> toMap(T object);
-}
+
+const _tableName = 'musics';
+const _columnId = 'id';
+const _columnTitle = 'title';
+const _columnArtist = 'artist';
+const _columnGenre = 'genre';
+const _columnAlbum = 'album';
+const _columnURI = 'uri';
+const _columnLocalURI = 'local_uri';
+
+const createTableQuery =
+    "CREATE TABLE $_tableName($_columnId INTEGER PRIMARY KEY,"
+    " $_columnTitle TEXT,"
+    " $_columnArtist TEXT,"
+    " $_columnAlbum TEXT,"
+    " $_columnGenre TEXT,"
+    " $_columnURI TEXT)";
+
 class DatabaseProvider {
   static final _instance = DatabaseProvider._internal();
   static final DatabaseProvider get = _instance;
@@ -26,14 +39,18 @@ class DatabaseProvider {
   Future _init() async {
     final databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'music_app.db');
-    _db = await openDatabase(path, version: 2,
+    _db = await openDatabase(path, version: 4,
       onCreate: (Database db, int version) {
-        return db.execute(MusicDao.get.createTableQuery);
+        return db.execute(createTableQuery);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion)  {
         if (newVersion == 2) {
-          return db.execute("ALTER TABLE ${MusicDao.get.tableName} ADD COLUMN uri TEXT ");
+          return db.execute("ALTER TABLE $_tableName ADD COLUMN $_columnURI TEXT ");
         }
+        if (newVersion == 3) {
+          return db.execute("ALTER TABLE $_tableName ADD COLUMN $_columnLocalURI TEXT ");
+        }
+
       }
     );
   }
@@ -45,82 +62,82 @@ class Music {
   String genre;
   String album;
   String uri;
-  Music({@required this.title, @required this.uri, this.artist, this.genre, this.album});
-}
+  String local_uri;
+  Music({@required this.title, @required this.uri, this.artist, this.genre,
+    this.album, this.local_uri});
 
-class MusicDao implements Dao<Music> {
-  final tableName = 'musics';
-  final _columnId = 'id';
-  final _columnTitle = 'title';
-  final _columnArtist = 'artist';
-  final _columnGenre = 'genre';
-  final _columnAlbum = 'album';
-  final _columnURI = 'uri';
-  MusicDao._internal();
-  static final _instance = MusicDao._internal();
-  static final MusicDao get = _instance;
-  @override
-  String get createTableQuery =>
-      "CREATE TABLE $tableName($_columnId INTEGER PRIMARY KEY,"
-          " $_columnTitle TEXT,"
-          " $_columnArtist TEXT,"
-          " $_columnAlbum TEXT,"
-          " $_columnGenre TEXT,"
-          " $_columnURI TEXT)";
-  @override
-  Music fromMap(Map<String, dynamic> map) {
+  factory Music.fromMap(Map<String, dynamic> map) {
     Music music = Music(title: map[_columnTitle], uri: map[_columnURI]);
-    music.id = map[_columnId];
-    music.artist = map[_columnArtist];
-    music.album = map[_columnAlbum];
-    music.genre = map[_columnGenre];
+    music.id = map[_columnId] as int ?? 0;
+    music.artist = map[_columnArtist] as String;
+    music.album = map[_columnAlbum] as String;
+    music.genre = map[_columnGenre] as String;
+    music.local_uri = map[_columnLocalURI] as String;
     return music;
   }
+
+
   @override
-  Map<String, dynamic> toMap(Music object) {
+  String toString() {
+    return "$title, $artist";
+  }
+
+  static Map<String, dynamic> toMap(Music object) {
     return <String, dynamic>{
       _columnTitle: object.title,
       _columnArtist: object.artist,
       _columnAlbum: object.album,
       _columnGenre: object.genre,
-      _columnURI: object.uri
+      _columnURI: object.uri,
+      _columnLocalURI: object.local_uri
     };
   }
-  @override
-  List<Music> fromResultSet(List<Map<String, dynamic>> resultSet) {
+
+  static List<Music> fromResultSet(List<Map<String, dynamic>> resultSet) {
     return List.generate(resultSet.length, (i) {
-      return fromMap(resultSet[i]);
+      return Music.fromMap(resultSet[i]);
+    });
+  }
+
+  static Future<String> downloadMusic(Music music) {
+    return HttpClient().getUrl(Uri.parse(music.uri)).then((HttpClientRequest request) {
+      return request.close();
+    }).then((HttpClientResponse response) async {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/${music.title}.mp3');
+      await response.pipe(file.openWrite());
+      return file.path;
     });
   }
 }
+
 
 class MusicsDatabaseRepository implements MusicsRepository {
   static final _instance = MusicsDatabaseRepository._internal();
   static MusicsDatabaseRepository get = _instance;
 
   MusicsDatabaseRepository._internal();
-  final dao = MusicDao.get;
   @override
   DatabaseProvider databaseProvider = DatabaseProvider.get;
   @override
   Future<Music> insert(Music music) async {
 
     final db = await databaseProvider.db();
-    music.id = await db.insert(dao.tableName, dao.toMap(music));
+    music.id = await db.insert(_tableName, Music.toMap(music));
     return music;
   }
   @override
   Future<Music> delete(Music music) async {
     final db = await databaseProvider.db();
-    await db.delete(dao.tableName,
-        where: dao._columnId + " = ?", whereArgs: [music.id]);
+    await db.delete(_tableName,
+        where: _columnId + " = ?", whereArgs: [music.id]);
     return music;
   }
   @override
   Future<Music> update(Music music) async {
     final db = await databaseProvider.db();
-    await db.update(dao.tableName, dao.toMap(music),
-        where: dao._columnId + " = ?", whereArgs: [music.id]);
+    await db.update(_tableName, Music.toMap(music),
+        where: _columnId + " = ?", whereArgs: [music.id]);
     return music;
   }
   @override
@@ -128,24 +145,25 @@ class MusicsDatabaseRepository implements MusicsRepository {
     if (facet == null || facet.isEmpty) {
       return Future.value(null);
     }
-    final facetName = facet.split(":")[0];
-    final facetValue = facet.split(":")[1];
+    final split = facet.split(":");
+    final facetName = split.first;
+    final facetValue = split[1];
     final db = await databaseProvider.db();
-    List<Map> resultSet = await db.query(dao.tableName, where: facetName + " = ?", whereArgs: [facetValue]);
-    return dao.fromResultSet(resultSet);
+    List<Map> resultSet = await db.query(_tableName, where: facetName + " = ?", whereArgs: [facetValue]);
+    return Music.fromResultSet(resultSet);
   }
   @override
   Future<List<Music>> getMusics() async {
     final db = await databaseProvider.db();
-    List<Map> maps = await db.query(dao.tableName);
-    return dao.fromResultSet(maps);
+    List<Map> maps = await db.query(_tableName);
+    return Music.fromResultSet(maps);
   }
 
   @override
   Future<Music> getMusic(int id) async {
     final db = await databaseProvider.db();
-    List<Map> resultSet = await db.query(dao.tableName, where: dao._columnId + " = ?", whereArgs: [id]);
-    return dao.fromResultSet(resultSet).first;
+    List<Map> resultSet = await db.query(_tableName, where: _columnId + " = ?", whereArgs: [id]);
+    return Music.fromResultSet(resultSet).first;
   }
 
   @override
