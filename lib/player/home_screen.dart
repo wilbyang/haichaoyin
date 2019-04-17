@@ -3,13 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/music_bloc.dart';
 import 'package:haichaoyin/player/music_data.dart';
-import 'package:haichaoyin/player/player.dart';
+import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/player2.dart';
-import 'package:haichaoyin/trial/lifecycle.dart';
-//import 'package:haichaoyin/trial/lifecycle.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
 class HomeScreen extends StatelessWidget {
