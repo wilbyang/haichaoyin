@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:haichaoyin/player/music_list.dart';
 import 'package:haichaoyin/player/music_bloc.dart';
 import 'package:haichaoyin/player/music_data.dart';
 import 'package:haichaoyin/player/player.dart';
+import 'package:haichaoyin/player/player2.dart';
+import 'package:haichaoyin/trial/lifecycle.dart';
+//import 'package:haichaoyin/trial/lifecycle.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -37,11 +39,16 @@ class HomeScreen extends StatelessWidget {
         if (snapshot.data == null)
           return Center(child: CircularProgressIndicator());
         final artistTiles = snapshot.data["artist"].map((facetItem) {
-          return InkWell(
-            child: CircleAvatar(
-              child: Text(facetItem),
-            ),
-            onTap: () => bloc.changeFact('artist:$facetItem'),
+          return RaisedButton(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+            textColor: Colors.white,
+            color: Colors.pink,
+            splashColor: Colors.redAccent,
+            child: Text(facetItem),
+            onPressed: () {
+              bloc.nextFact('artist:$facetItem');
+              Navigator.of(context).pop();
+            },
           );
         });
 
@@ -55,9 +62,16 @@ class HomeScreen extends StatelessWidget {
         );
 
         final genreTiles = snapshot.data["genre"].map((facetItem) {
-          return InkWell(
-            child: Chip(label: Text(facetItem)),
-            onTap: () => bloc.changeFact('genre:$facetItem'),
+          return RaisedButton(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+            textColor: Colors.white,
+            color: Colors.pink,
+            splashColor: Colors.redAccent,
+            child: Text(facetItem),
+            onPressed: () {
+              bloc.nextFact('genre:$facetItem');
+              Navigator.of(context).pop();
+            },
           );
         });
 
@@ -114,13 +128,12 @@ class HomeScreen extends StatelessWidget {
               onPressed: () async {
                 final result = await QRCodeReader().scan();
                 final music = parseJson(result);
-                bloc.changeFlash("下载中");
+                bloc.nextFlash("下载中");
                 final localPath = await Music.downloadMusic(music);
                 music.local_uri = localPath;
                 MusicsDatabaseRepository.get.insert(music).then((music) {
-                  bloc.changeFlash("下载完成");
-                  final snackBar = SnackBar(content: Text('下载完成'));
-                  Scaffold.of(context).showSnackBar(snackBar);
+                  bloc.nextFlash("下载完成");
+
                 });
               },
             ),
@@ -141,7 +154,7 @@ class HomeScreen extends StatelessWidget {
               else {
                 return MusicList3(
                   musics: snapshot.data,
-                  onTapItem: bloc.chooseMusic,
+                  onTapItem: bloc.nextMusic,
                 );
               }
             },
@@ -149,13 +162,14 @@ class HomeScreen extends StatelessWidget {
           StreamBuilder<Music>(
             stream: bloc.chosenMusic,
             builder: (context, snapshot) {
-              if (snapshot.data == null)
+              if (!snapshot.hasData)
                 return Container(
                   width: 0.0,
                   height: 0.0,
                 );
               else {
-                return MyAudioPlayer(music: snapshot.data);
+                return MyAudioPlayerWithBloc();
+//                return MyAudioPlayer2(music: snapshot.data.title);
               }
             },
           ),

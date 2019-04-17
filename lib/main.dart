@@ -49,10 +49,10 @@ class SomeChildWidget extends StatelessWidget {
         Row(
           children: <Widget>[
             IconButton(icon: Icon(Icons.subdirectory_arrow_left),onPressed: () {
-              bloc.changeFact("artist:王菲");
+              bloc.nextFact("artist:王菲");
             },),
             IconButton(icon: Icon(Icons.subdirectory_arrow_right),onPressed: () {
-              bloc.changeFact("artist:许巍");
+              bloc.nextFact("artist:许巍");
             },),
           ],
         )

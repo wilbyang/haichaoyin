@@ -112,7 +112,7 @@ class MusicRow extends StatelessWidget {
                     style: TextStyle(fontSize: 16.0, letterSpacing: 1.2),
                   ),
                   Text(music.album),
-                  Text(music.local_uri ?? ""),
+                  Text(music.genre ?? ""),
                 ],
               ),
             ),
